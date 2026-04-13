@@ -7,13 +7,13 @@ ExpenseMind — приложение для учёта личных финанс
 ---
 
 ## Архитектура
-
+```text
 Frontend (React)
 ↓
 Go Backend (API + бизнес-логика) ←→ Database (PostgreSQL / SQLite)
 ↓
 Python ML Service (аналитика и прогноз)
-
+```
 ---
 
 ## Возможности
@@ -28,7 +28,7 @@ Python ML Service (аналитика и прогноз)
 ---
 
 ## Структура проекта
-
+```text
 expensemind/
 ├── backend/              # Go backend (API + логика)
 │   ├── cmd/
@@ -54,13 +54,13 @@ expensemind/
 ├── .env.example
 ├── README.md
 └── CLAUDE.md
-
+```
 ---
 
 ## Поток данных
-
+```
 CSV → Go → база данных → Go → ML сервис → Go → Frontend
-
+```
 ---
 
 ## Распределение ответственности
@@ -95,13 +95,13 @@ Frontend:
 ## Модель данных
 
 Пример транзакции:
-
+```text
 id: 1
 amount: -500.0
 description: Пятёрочка
 mcc: 5411
 date: 2026-04-10
-
+```
 Правила:
 - отрицательное значение — расход
 - положительное — доход
@@ -112,19 +112,19 @@ date: 2026-04-10
 ## Запуск
 
 1. Клонировать репозиторий
-
+```bash
 git clone https://github.com/yourname/expensemind.git
 cd expensemind
-
+```
 2. Запустить через Docker
-
+```bash
 docker-compose up --build
-
+```
 3. Доступ
 
-Backend: http://localhost:8080
-ML: http://localhost:5001
-Frontend: http://localhost:3000
+- Backend: http://localhost:8080
+- ML: http://localhost:5001
+- Frontend: http://localhost:3000
 
 ---
 
@@ -148,7 +148,7 @@ ML API: /internal/v1
 
 ## Технологии
 
-Go — backend
-Python (FastAPI, pandas, scikit-learn) — ML
-React — frontend
-PostgreSQL / SQLite — база данных
+- Go — backend
+- Python (FastAPI, pandas, scikit-learn) — ML
+- React — frontend
+- PostgreSQL / SQLite — база данных
