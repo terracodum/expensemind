@@ -20,22 +20,22 @@ func ValidationError(message string) AppError {
 	return New(VALIDATION_ERROR, message)
 }
 
-func CsvParseError(message string) AppError {
-	return New(CSV_PARSE_ERROR, message)
+func PdfParseError(message string) AppError {
+	return New(PDF_PARSE_ERROR, message)
 }
 
-func CsvInvalidError(message string) AppError {
-	return New(CSV_INVALID_FORMAT, message)
+func PdfInvalidError(message string) AppError {
+	return New(PDF_INVALID_FORMAT, message)
 }
 
-func MlServiceUnavalable(message string, err error) AppError {
+func MLServiceUnavailable(message string, err error) AppError {
 	return Wrap(ML_SERVICE_UNAVAILABLE, message, err)
 }
 
-func MlResponseInvalid(message string, err error) AppError {
+func MLResponseInvalid(message string, err error) AppError {
 	return Wrap(ML_RESPONSE_INVALID, message, err)
 }
 
-func BdError(message string, err error) AppError {
+func DBError(message string, err error) AppError {
 	return Wrap(DB_ERROR, message, err)
 }
