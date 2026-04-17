@@ -6,15 +6,19 @@
 
 ---
 
-## Быстрый старт
+## Установка
 
+1. Установи [Docker Desktop](https://www.docker.com/products/docker-desktop)
+2. Склонируй репозиторий
 ```bash
-expensemind
+git clone https://github.com/terracodum/expensemind.git
+cd expensemind
 ```
-
-Открывается браузер на `http://localhost:3000`. Всё.
-
-> Требуется Docker Desktop. Больше никаких зависимостей.
+3. Запусти
+```bash
+docker-compose up
+```
+4. Открой браузер на `http://localhost:3000`
 
 ---
 
