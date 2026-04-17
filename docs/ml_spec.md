@@ -36,7 +36,8 @@ ML сервис является **вычислительным модулем**
 Python       3.11+
 FastAPI      — HTTP сервер
 pandas       — обработка временных рядов
-scikit-learn — модели прогнозирования
+prophet      — прогнозирование временных рядов (основная модель)
+scikit-learn — вспомогательные метрики и утилиты
 uvicorn      — ASGI сервер
 pydantic     — валидация данных
 ```
@@ -272,75 +273,73 @@ class PredictResponse(BaseModel):
 
 ## Forecaster Logic
 
-Минимальная рабочая реализация:
+Используем **Prophet** (Facebook) — алгоритм для временных рядов с сезонностью.
+
+**Почему Prophet, а не LinearRegression:**
+- Временной ряд одного пользователя — мало данных, Prophet специально для этого
+- Автоматически находит паттерны: стипендия каждые 15 числа, расходы по выходным
+- Чем дольше пользователь использует сервис, тем точнее прогноз (больше данных в БД)
+- LinearRegression построит прямую и не учтёт сезонность
 
 ```python
 # models/forecaster.py
 
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from prophet import Prophet
 
 class Forecaster:
     def predict(self, timeseries, horizon, features):
+        # Prophet ожидает колонки ds (datetime) и y (значение)
+        # t — порядковый номер дня, преобразуем в дату
+        base_date = pd.Timestamp.today().normalize()
         df = pd.DataFrame([
             {
-                "t":                    p.t,
-                "balance":              p.balance,
-                "day_of_week":          p.day_of_week,
-                "is_weekend":           int(p.is_weekend),
-                "food_total":           p.food_total,
-                "transport_total":      p.transport_total,
-                "entertainment_total":  p.entertainment_total,
-                "avg_transaction_size": p.avg_transaction_size,
-                "transaction_count":    p.transaction_count,
+                "ds": base_date - pd.Timedelta(days=len(timeseries) - p.t),
+                "y":  p.balance,
             }
             for p in timeseries
         ])
 
-        feature_cols = [
-            "t", "day_of_week", "is_weekend",
-            "food_total", "transport_total", "entertainment_total",
-            "avg_transaction_size", "transaction_count"
-        ]
+        model = Prophet(daily_seasonality=False, weekly_seasonality=True)
 
-        X = df[feature_cols].values
-        y = df["balance"].values
+        # Добавляем ожидаемые поступления как внешние события
+        for event in features.income_events:
+            event_date = base_date + pd.Timedelta(days=event.t - len(timeseries))
+            model.add_regressor(f"income_{event.t}")
+            df[f"income_{event.t}"] = 0.0
 
-        model = LinearRegression()
-        model.fit(X, y)
+        model.fit(df)
 
-        last_t = int(df["t"].max())
-        future_t = np.arange(last_t + 1, last_t + horizon + 1)
+        future = model.make_future_dataframe(periods=horizon)
+        forecast_df = model.predict(future)
 
-        # Для будущих точек используем средние значения фич
-        avg_features = df[feature_cols[1:]].mean().values
-        future_X = np.column_stack([
-            future_t,
-            np.tile(avg_features, (horizon, 1))
-        ])
-
-        predicted = model.predict(future_X)
+        future_rows = forecast_df.tail(horizon)
+        last_t = int(timeseries[-1].t)
 
         # Учитываем ожидаемые поступления
         income_map = {e.t: e.amount for e in features.income_events}
-        for i, t in enumerate(future_t):
+        predicted = future_rows["yhat"].values.copy()
+        for i in range(horizon):
+            t = last_t + i + 1
             if t in income_map:
                 predicted[i] += income_map[t]
 
-        r2 = model.score(X, y)
-        confidence = float(max(0.0, min(1.0, r2)))
-
         forecast = [
-            {"t": int(t), "balance": float(b)}
-            for t, b in zip(future_t, predicted)
+            {"t": last_t + i + 1, "balance": float(b)}
+            for i, b in enumerate(predicted)
         ]
+
+        # Уверенность — насколько узкий доверительный интервал
+        interval_width = (future_rows["yhat_upper"] - future_rows["yhat_lower"]).mean()
+        avg_balance = abs(future_rows["yhat"].mean()) + 1e-9
+        confidence = float(max(0.0, min(1.0, 1.0 - interval_width / avg_balance / 2)))
 
         return forecast, float(predicted[-1]), confidence
 ```
 
-> Это базовая реализация. Можно улучшать модель — добавлять другие алгоритмы
-> (Ridge, RandomForest), кросс-валидацию, нормализацию фич.
+> Это базовая реализация на Prophet. Можно улучшать — добавлять yearly_seasonality
+> при накоплении данных за год+, тюнить changepoint_prior_scale.
 > Главное — не менять формат запроса и ответа без согласования с Go командой.
 
 ---

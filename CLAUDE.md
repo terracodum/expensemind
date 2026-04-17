@@ -122,11 +122,10 @@ DB_ERROR
 ```go
 Transaction {
     ID          int
+    Date        time.Time
     Amount      float64   // < 0 расход, > 0 доход
     Description string
-    MCC         int
-    Category    string    // определяется из MCC
-    Date        time.Time
+    Category    string    // проставляется пользователем вручную через UI
 }
 ```
 
@@ -191,11 +190,11 @@ errors   ←  все слои зависят от него
 **POST /transactions/upload**
 ```
 handler → service.UploadPDF()
-            → pdf.Parser.Parse()     → []Transaction
-            → mcc.ToCategory()       → категория для каждой транзакции
+            → pdf.Parser.Parse()     → []Transaction (Category = "")
             → repository.SaveAll()
           → { "uploaded": 42 }
 ```
+Пользователь вручную проставляет категории через UI после загрузки.
 
 **GET /transactions**
 ```
@@ -223,7 +222,6 @@ CREATE TABLE transactions (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     amount      REAL    NOT NULL,
     description TEXT,
-    mcc         INTEGER,
     category    TEXT,
     date        TEXT    NOT NULL
 );

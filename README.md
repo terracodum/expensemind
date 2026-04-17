@@ -24,11 +24,13 @@ docker-compose up
 
 ## Что умеет
 
-- Загрузка выписки из Т-Банка (PDF)
-- Автоматическая категоризация расходов
+- Загрузка выписок из Т-Банка (PDF) — можно загрузить несколько выписок из разных банков
+- Ручная категоризация расходов через UI
 - Аналитика по категориям и периодам
-- Прогноз баланса на 30 дней вперёд
-- Уведомления при превышении расходов
+- Прогноз баланса на 30 дней вперёд (Prophet — учитывает сезонность и регулярные доходы)
+- Редактирование и удаление транзакций
+
+> Для точного прогноза рекомендуем загрузить историю за последний год при первом запуске.
 
 ---
 
@@ -61,8 +63,7 @@ expensemind/
 │   │   │   └── constructors.go            # New(), Wrap(), NotFound()...
 │   │   ├── domain/
 │   │   │   ├── transaction.go             # структура Transaction
-│   │   │   ├── forecast.go                # структура Forecast
-│   │   │   └── mcc.go                     # MCC коды → категории
+│   │   │   └── forecast.go                # структура Forecast
 │   │   ├── repository/
 │   │   │   ├── interface.go               # TransactionRepository интерфейс
 │   │   │   └── sqlite/
@@ -200,7 +201,6 @@ CREATE TABLE transactions (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     amount      REAL    NOT NULL,
     description TEXT,
-    mcc         INTEGER,
     category    TEXT,
     date        TEXT    NOT NULL
 );
