@@ -20,12 +20,16 @@ func ValidationError(message string) AppError {
 	return New(VALIDATION_ERROR, message)
 }
 
-func PdfParseError(message string) AppError {
-	return New(PDF_PARSE_ERROR, message)
+func ParseError(message string) AppError {
+	return New(PARSE_ERROR, message)
 }
 
-func PdfInvalidError(message string) AppError {
-	return New(PDF_INVALID_FORMAT, message)
+func InvalidPDFFormat(message string) AppError {
+	return New(INVALID_PDF_FORMAT, message)
+}
+
+func InvalidCSVFormat(message string) AppError {
+	return New(INVALID_CSV_FORMAT, message)
 }
 
 func MLServiceUnavailable(message string, err error) AppError {
