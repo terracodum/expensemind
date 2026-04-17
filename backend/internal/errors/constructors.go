@@ -5,7 +5,7 @@ func New(code ErrorCode, message string) AppError {
 }
 
 func Wrap(code ErrorCode, message string, err error) AppError {
-	return &appError{code, message, err}
+	return &appError{code: code, message: message, wrapped: err}
 }
 
 func NotFound(message string) AppError {
