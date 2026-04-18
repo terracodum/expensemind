@@ -187,10 +187,12 @@ errors   ←  все слои зависят от него
 
 ## Потоки данных
 
+Загрузка файла и прогноз — два независимых события. ML сервис при загрузке не вызывается никогда.
+
 **POST /transactions/upload**
 ```
-handler → service.UploadPDF()
-            → pdf.Parser.Parse()     → []Transaction (Category = "")
+handler → service.Upload()
+            → parser.Parse()         → []Transaction (Category = "")
             → repository.SaveAll()
           → { "uploaded": 42 }
 ```
@@ -203,15 +205,25 @@ handler → service.GetTransactions(filters)
           → []Transaction
 ```
 
-**GET /analytics/forecast**
+**POST /analytics/forecast** — асинхронный
 ```
-handler → service.GetForecast(horizon)
-            → repository.FindAll()
-            → агрегация в timeseries по дням   ← бизнес-логика в Go
-            → извлечение фич
-            → ml.Client.Predict()
-          → Forecast
+handler → service.RequestForecast()
+            → repository.SaveJob()
+          → { "job_id": "abc", "status": "processing" }
+
+воркер (фон):
+  → repository.FindAll()             ← все транзакции за всё время
+  → агрегация в timeseries           ← бизнес-логика в Go
+  → ml.Client.Predict()
+  → repository.SaveForecastResult()
+
+**GET /analytics/forecast/:job_id**
+фронт поллит каждые 2 секунды:
+  → { "status": "processing" }       ← пока считает
+  → { "status": "done", "forecast": [...] }  ← когда готово
 ```
+
+Причина асинхронности: ML может считать несколько секунд, синхронный запрос заблокирует UI.
 
 ---
 
@@ -231,6 +243,13 @@ CREATE TABLE recurring_income (
     amount REAL    NOT NULL,
     day    INTEGER NOT NULL,  -- день месяца (1-31)
     label  TEXT               -- "стипендия", "зарплата"
+);
+
+CREATE TABLE forecast_jobs (
+    id         TEXT    PRIMARY KEY,  -- job_id (UUID)
+    status     TEXT    NOT NULL,     -- processing | done | error
+    result     TEXT,                 -- JSON результата прогноза
+    created_at TEXT    NOT NULL
 );
 ```
 
