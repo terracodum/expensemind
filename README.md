@@ -85,10 +85,10 @@ expensemind/
 │   │   │   ├── interface.go               # TransactionRepository интерфейс
 │   │   │   └── sqlite/
 │   │   │       └── transaction.go         # реализация для SQLite
-│   │   ├── pdf/
+│   │   ├── parser/
 │   │   │   ├── interface.go               # Parser интерфейс
-│   │   │   ├── parser.go                  # парсер выписок Т-Банка
-│   │   │   └── validator.go               # валидация данных
+│   │   │   ├── pdf.go                     # парсер выписок Т-Банка (PDF)
+│   │   │   └── csv.go                     # парсер CSV
 │   │   ├── ml/
 │   │   │   ├── interface.go               # MLClient интерфейс
 │   │   │   ├── client.go                  # HTTP клиент к Python сервису
@@ -145,8 +145,8 @@ expensemind/
 ### `internal/repository/` — база данных
 Только чтение и запись. Не знает про бизнес-логику.
 
-### `internal/pdf/` — парсер PDF
-Читает выписку Т-Банка, возвращает `[]Transaction`. Ничего не сохраняет.
+### `internal/parser/` — парсеры файлов
+Читает выписку Т-Банка (PDF) или CSV, возвращает `[]Transaction`. Ничего не сохраняет.
 
 ### `internal/ml/` — клиент ML сервиса
 HTTP клиент к Python. Формирует запрос, возвращает прогноз.
@@ -165,7 +165,7 @@ HTTP клиент к Python. Формирует запрос, возвращае
 main.go
   │
   ├── создаёт repository
-  ├── создаёт pdf.Parser
+  ├── создаёт parser.Parser
   ├── создаёт ml.Client
   ├── создаёт service (получает repository, parser, ml)
   └── создаёт handler (получает service)
@@ -185,8 +185,8 @@ errors   ←  все зависят от него
 
 **POST /transactions/upload**
 ```
-handler → service.UploadPDF()
-            → pdf.Parser.Parse()    → []Transaction
+handler → service.Upload()
+            → parser.Parse()       → []Transaction
             → mcc.ToCategory()     → категория для каждой транзакции
             → repository.SaveAll()
           → { "uploaded": 42 }
@@ -255,7 +255,7 @@ CREATE TABLE recurring_income (
 Base: /api/v1
 
 GET  /transactions          — список транзакций
-POST /transactions/upload   — загрузка PDF выписки
+POST /transactions/upload   — загрузка PDF или CSV файла
 GET  /analytics/forecast    — прогноз баланса
 ```
 
