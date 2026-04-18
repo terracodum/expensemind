@@ -87,7 +87,11 @@ func (r *SQLiteRepository) SaveAll(transaction []domain.Transaction) error {
 
 	}
 
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		return errors.DBError("failed to save transactions", err)
+	}
+
 	return nil
 }
 
