@@ -4,17 +4,16 @@ import (
 	"database/sql"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/terracodum/expensemind/backend/internal/domain"
 	"github.com/terracodum/expensemind/backend/internal/errors"
 	"github.com/terracodum/expensemind/backend/internal/repository"
 )
 
-type SQLiteRepository struct {
+type SQLiteTransactionRepository struct {
 	db *sql.DB
 }
 
-func (r *SQLiteRepository) scanRows(rows *sql.Rows) ([]domain.Transaction, error) {
+func (r *SQLiteTransactionRepository) scanRows(rows *sql.Rows) ([]domain.Transaction, error) {
 	var result []domain.Transaction
 
 	for rows.Next() {
@@ -35,25 +34,7 @@ func (r *SQLiteRepository) scanRows(rows *sql.Rows) ([]domain.Transaction, error
 	return result, nil
 }
 
-func New(s *sql.DB) (SQLiteRepository, error) {
-	_, err := s.Exec(`
-		CREATE TABLE IF NOT EXISTS transactions (
-				id          INTEGER PRIMARY KEY AUTOINCREMENT,
-				amount      REAL    NOT NULL,
-				description TEXT,
-				category    TEXT,
-				date        TEXT    NOT NULL
-			);
-	`)
-
-	if err != nil {
-		return SQLiteRepository{}, errors.DBError("failed to create transactions table", err)
-	}
-
-	return SQLiteRepository{s}, nil
-}
-
-func (r *SQLiteRepository) Save(tx domain.Transaction) error {
+func (r *SQLiteTransactionRepository) Save(tx domain.Transaction) error {
 	_, err := r.db.Exec(`
 		INSERT INTO transactions (amount, description, category, date) VALUES (?, ?, ?, ?)`,
 		tx.Amount, tx.Description, tx.Category, tx.Date,
@@ -66,7 +47,7 @@ func (r *SQLiteRepository) Save(tx domain.Transaction) error {
 	return nil
 }
 
-func (r *SQLiteRepository) SaveAll(transaction []domain.Transaction) error {
+func (r *SQLiteTransactionRepository) SaveAll(transaction []domain.Transaction) error {
 	tx, err := r.db.Begin()
 
 	if err != nil {
@@ -95,7 +76,7 @@ func (r *SQLiteRepository) SaveAll(transaction []domain.Transaction) error {
 	return nil
 }
 
-func (r *SQLiteRepository) FindAll(filters repository.Filters) ([]domain.Transaction, error) {
+func (r *SQLiteTransactionRepository) FindAll(filters repository.Filters) ([]domain.Transaction, error) {
 	query := "SELECT id, amount, description, category, date FROM transactions WHERE 1=1"
 	args := []any{}
 
@@ -127,7 +108,7 @@ func (r *SQLiteRepository) FindAll(filters repository.Filters) ([]domain.Transac
 	return result, nil
 }
 
-func (r *SQLiteRepository) FindByDateRange(from, to time.Time) ([]domain.Transaction, error) {
+func (r *SQLiteTransactionRepository) FindByDateRange(from, to time.Time) ([]domain.Transaction, error) {
 	query := "SELECT id, amount, description, category, date FROM transactions WHERE date >= ? AND date <= ?"
 
 	rows, err := r.db.Query(query, from, to)
@@ -144,7 +125,7 @@ func (r *SQLiteRepository) FindByDateRange(from, to time.Time) ([]domain.Transac
 	return result, nil
 }
 
-func (r *SQLiteRepository) Update(tx domain.Transaction) error {
+func (r *SQLiteTransactionRepository) Update(tx domain.Transaction) error {
 	querry := "UPDATE transactions SET amount = ?, description = ?, category = ?, date = ? WHERE id = ?"
 
 	_, err := r.db.Exec(querry, tx.Amount, tx.Description, tx.Category, tx.Date, tx.ID)
@@ -156,7 +137,7 @@ func (r *SQLiteRepository) Update(tx domain.Transaction) error {
 	return nil
 }
 
-func (r *SQLiteRepository) Delete(id int) error {
+func (r *SQLiteTransactionRepository) Delete(id int) error {
 	querry := "DELETE FROM transactions WHERE id = ?"
 
 	_, err := r.db.Exec(querry, id)

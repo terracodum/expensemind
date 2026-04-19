@@ -20,3 +20,16 @@ type TransactionRepository interface {
 	Update(tx domain.Transaction) error
 	Delete(id int) error
 }
+
+type RecurringRuleRepository interface {
+	Save(rule domain.RecurringRule) error
+	FindActive(today time.Time) ([]domain.RecurringRule, error)
+	Delete(sourceID string) error
+}
+
+type ForecastJobRepository interface {
+	Create() (int, error)
+	FindByID(id int) (domain.ForecastJob, error)
+	FindAll() ([]domain.ForecastJob, error)
+	Update(job domain.ForecastJob) error
+}
