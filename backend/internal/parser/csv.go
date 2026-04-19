@@ -15,7 +15,11 @@ type CSVParser struct{}
 func (p *CSVParser) Parse(file io.Reader) ([]domain.Transaction, error) {
 	r := csv.NewReader(file)
 	r.Comma = ';'
-	headers, _ := r.Read()
+	headers, err := r.Read()
+	if err != nil {
+		return nil, errors.ParseError("cannot parse csv")
+	}
+
 	colIndex := map[string]int{}
 	for i, h := range headers {
 		colIndex[h] = i
