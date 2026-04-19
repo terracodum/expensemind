@@ -1,0 +1,22 @@
+# Errors
+
+## Codes
+
+* INTERNAL_ERROR
+* VALIDATION_ERROR
+* NOT_FOUND
+* PARSE_ERROR
+* INVALID_PDF_FORMAT
+* INVALID_CSV_FORMAT
+* ML_SERVICE_UNAVAILABLE
+* ML_RESPONSE_INVALID
+* DB_ERROR
+
+## Format
+
+{
+"error": {
+"code": "...",
+"message": "..."
+}
+}
