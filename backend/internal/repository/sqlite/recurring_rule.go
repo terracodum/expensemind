@@ -36,7 +36,7 @@ func (r *SQLiteRecurringRuleRepository) FindActive(today time.Time) ([]domain.Re
 
 	rows, err := r.db.Query(query, today)
 	if err != nil {
-		return nil, errors.DBError("failed to find transactions", err)
+		return nil, errors.DBError("failed to find recurring rule", err)
 	}
 	defer rows.Close()
 
@@ -52,7 +52,7 @@ func (r *SQLiteRecurringRuleRepository) FindActive(today time.Time) ([]domain.Re
 		var label sql.NullString
 
 		if err := rows.Scan(&id, &source_id, &typeo, &amount, &day, &start_date, &label); err != nil {
-			return nil, errors.DBError("failed to scan transaction row", err)
+			return nil, errors.DBError("failed to scan recurring rule row", err)
 		}
 
 		trans := domain.RecurringRule{ID: id, SourceID: source_id.String, Type: typeo.String, Amount: amount, Day: day, StartDate: start_date, Label: label.String}
