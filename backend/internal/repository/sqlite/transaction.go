@@ -9,6 +9,7 @@ import (
 	"github.com/terracodum/expensemind/backend/internal/repository"
 )
 
+
 type SQLiteTransactionRepository struct {
 	db *sql.DB
 }
@@ -18,13 +19,18 @@ func (r *SQLiteTransactionRepository) scanRows(rows *sql.Rows) ([]domain.Transac
 
 	for rows.Next() {
 		var id int
-		var date time.Time
+		var dateStr string
 		var amount float64
 		var description sql.NullString
 		var category sql.NullString
 
-		if err := rows.Scan(&id, &amount, &description, &category, &date); err != nil {
+		if err := rows.Scan(&id, &amount, &description, &category, &dateStr); err != nil {
 			return nil, errors.DBError("failed to scan transaction row", err)
+		}
+
+		date, err := parseDBTime(dateStr)
+		if err != nil {
+			return nil, errors.DBError("failed to parse transaction date", err)
 		}
 
 		trans := domain.Transaction{ID: id, Date: date, Amount: amount, Description: description.String, Category: category.String}

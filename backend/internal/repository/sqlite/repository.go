@@ -2,10 +2,31 @@ package sqlite
 
 import (
 	"database/sql"
+	"fmt"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/terracodum/expensemind/backend/internal/errors"
 )
+
+var dbTimeFormats = []string{
+	"2006-01-02 15:04:05.999999999-07:00",
+	"2006-01-02T15:04:05.999999999-07:00",
+	"2006-01-02 15:04:05.999999999",
+	"2006-01-02T15:04:05.999999999",
+	"2006-01-02 15:04:05",
+	"2006-01-02T15:04:05",
+	"2006-01-02",
+}
+
+func parseDBTime(s string) (time.Time, error) {
+	for _, f := range dbTimeFormats {
+		if t, err := time.Parse(f, s); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("cannot parse time: %s", s)
+}
 
 func New(s *sql.DB) (SQLiteTransactionRepository, SQLiteRecurringRuleRepository, SQLiteForecastJobRepository, error) {
 	_, err := s.Exec(`

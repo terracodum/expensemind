@@ -48,11 +48,16 @@ func (r *SQLiteRecurringRuleRepository) FindActive(today time.Time) ([]domain.Re
 		var typeo sql.NullString
 		var amount float64
 		var day int
-		var start_date time.Time
+		var start_date_str string
 		var label sql.NullString
 
-		if err := rows.Scan(&id, &source_id, &typeo, &amount, &day, &start_date, &label); err != nil {
+		if err := rows.Scan(&id, &source_id, &typeo, &amount, &day, &start_date_str, &label); err != nil {
 			return nil, errors.DBError("failed to scan recurring rule row", err)
+		}
+
+		start_date, err := parseDBTime(start_date_str)
+		if err != nil {
+			return nil, errors.DBError("failed to parse recurring rule start_date", err)
 		}
 
 		trans := domain.RecurringRule{ID: id, SourceID: source_id.String, Type: typeo.String, Amount: amount, Day: day, StartDate: start_date, Label: label.String}

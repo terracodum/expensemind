@@ -13,7 +13,11 @@ type SQLiteForecastJobRepository struct {
 	db *sql.DB
 }
 
-func (r *SQLiteForecastJobRepository) unpackJob(id int, status sql.NullString, result sql.NullString, createdAt time.Time) (domain.ForecastJob, error) {
+func (r *SQLiteForecastJobRepository) unpackJob(id int, status sql.NullString, result sql.NullString, createdAtStr string) (domain.ForecastJob, error) {
+	createdAt, err := parseDBTime(createdAtStr)
+	if err != nil {
+		return domain.ForecastJob{}, errors.DBError("failed to parse forecast job created_at", err)
+	}
 	var forecast domain.Forecast
 	if result.Valid {
 		err := json.Unmarshal([]byte(result.String), &forecast)
@@ -50,7 +54,7 @@ func (r *SQLiteForecastJobRepository) FindByID(id int) (domain.ForecastJob, erro
 		baseId     int
 		status     sql.NullString
 		result     sql.NullString
-		created_at time.Time
+		created_at string
 	)
 	err := row.Scan(&baseId, &status, &result, &created_at)
 	if err != nil {
@@ -74,7 +78,7 @@ func (r *SQLiteForecastJobRepository) FindAll() ([]domain.ForecastJob, error) {
 			baseId     int
 			status     sql.NullString
 			result     sql.NullString
-			created_at time.Time
+			created_at string
 		)
 
 		err := rows.Scan(&baseId, &status, &result, &created_at)
