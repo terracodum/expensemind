@@ -11,6 +11,9 @@ import (
 
 func TestTBankParse_Structure(t *testing.T) {
 	f, err := os.Open("testdata/statement.pdf")
+	if os.IsNotExist(err) {
+		t.Skip("testdata/statement.pdf not found, skipping")
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
