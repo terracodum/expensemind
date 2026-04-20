@@ -16,7 +16,7 @@ type TransactionRepository interface {
 	Save(tx domain.Transaction) error
 	SaveAll(txs []domain.Transaction) error
 	FindAll(filters Filters) ([]domain.Transaction, error)
-	FindByDateRange(from, to time.Time) ([]domain.Transaction, error)
+	FindForForecast(from, to time.Time) ([]domain.Transaction, error)
 	Update(tx domain.Transaction) error
 	Delete(id int) error
 }

@@ -46,7 +46,20 @@ func (p *CSVParser) Parse(file io.Reader) ([]domain.Transaction, error) {
 			return nil, errors.ParseError("invalid date")
 		}
 
-		tran := domain.Transaction{ID: 0, Amount: amount, Date: date, Description: row[colIndex["description"]], Category: row[colIndex["category"]]}
+		category := ""
+		if idx, ok := colIndex["category"]; ok {
+			category = row[idx]
+		}
+		if category == "" {
+			category = "unknown"
+		}
+
+		description := ""
+		if idx, ok := colIndex["description"]; ok {
+			description = row[idx]
+		}
+
+		tran := domain.Transaction{ID: 0, Amount: amount, Date: date, Description: description, Category: category}
 		result = append(result, tran)
 	}
 

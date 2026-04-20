@@ -108,7 +108,7 @@ func (r *SQLiteTransactionRepository) FindAll(filters repository.Filters) ([]dom
 	return result, nil
 }
 
-func (r *SQLiteTransactionRepository) FindByDateRange(from, to time.Time) ([]domain.Transaction, error) {
+func (r *SQLiteTransactionRepository) FindForForecast(from, to time.Time) ([]domain.Transaction, error) {
 	query := "SELECT id, amount, description, category, date FROM transactions WHERE date >= ? AND date <= ?"
 
 	rows, err := r.db.Query(query, from, to)
