@@ -7,7 +7,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/terracodum/expensemind/backend/internal/domain"
-	"github.com/terracodum/expensemind/backend/internal/repository"
 )
 
 func setupTransactionDB(t *testing.T) *SQLiteTransactionRepository {
@@ -38,7 +37,7 @@ func TestTransaction_SaveAndFindAll(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	txs, err := repo.FindAll(repository.Filters{})
+	txs, err := repo.FindAll(domain.Filters{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +71,7 @@ func TestTransaction_SaveAll(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := repo.FindAll(repository.Filters{})
+	result, err := repo.FindAll(domain.Filters{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +90,7 @@ func TestTransaction_FindAll_FilterByCategory(t *testing.T) {
 		Category: "Доход",
 	})
 
-	result, err := repo.FindAll(repository.Filters{Category: "Еда"})
+	result, err := repo.FindAll(domain.Filters{Category: "Еда"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +109,7 @@ func TestTransaction_FindAll_FilterByDateRange(t *testing.T) {
 	repo.Save(domain.Transaction{Date: time.Date(2026, 4, 1, 0, 0, 0, 0, time.UTC), Amount: -200, Category: "B"})
 	repo.Save(domain.Transaction{Date: time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC), Amount: -300, Category: "C"})
 
-	result, err := repo.FindAll(repository.Filters{
+	result, err := repo.FindAll(domain.Filters{
 		From: time.Date(2026, 3, 15, 0, 0, 0, 0, time.UTC),
 		To:   time.Date(2026, 4, 15, 0, 0, 0, 0, time.UTC),
 	})
@@ -129,7 +128,7 @@ func TestTransaction_Update(t *testing.T) {
 	repo := setupTransactionDB(t)
 
 	repo.Save(testTx)
-	txs, _ := repo.FindAll(repository.Filters{})
+	txs, _ := repo.FindAll(domain.Filters{})
 	saved := txs[0]
 
 	saved.Amount = -999.0
@@ -138,7 +137,7 @@ func TestTransaction_Update(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, _ := repo.FindAll(repository.Filters{})
+	result, _ := repo.FindAll(domain.Filters{})
 	if result[0].Amount != -999.0 {
 		t.Errorf("expected -999.0, got %v", result[0].Amount)
 	}
@@ -151,14 +150,14 @@ func TestTransaction_Delete(t *testing.T) {
 	repo := setupTransactionDB(t)
 
 	repo.Save(testTx)
-	txs, _ := repo.FindAll(repository.Filters{})
+	txs, _ := repo.FindAll(domain.Filters{})
 	id := txs[0].ID
 
 	if err := repo.Delete(id); err != nil {
 		t.Fatal(err)
 	}
 
-	result, _ := repo.FindAll(repository.Filters{})
+	result, _ := repo.FindAll(domain.Filters{})
 	if len(result) != 0 {
 		t.Fatalf("expected 0, got %d", len(result))
 	}

@@ -4,9 +4,12 @@
 
 POST /transactions/upload
 
-handler → service
-→ parser.Parse()
-→ repository.SaveAll()
+```
+handler → service.UploadTransactions(contentType, file)
+→ parser.Factory.Create(contentType)
+→ parser.Parse(file)
+→ repository.SaveAll(txs)
+```
 
 ---
 
@@ -14,8 +17,10 @@ handler → service
 
 GET /transactions
 
-handler → service
+```
+handler → service.GetTransactions(filters)
 → repository.FindAll(filters)
+```
 
 ---
 
@@ -23,26 +28,39 @@ handler → service
 
 POST /analytics/forecast
 
-handler → service
-→ repository.SaveJob()
+```
+handler → service.CreateForecast()
+→ ForecastJobRepository.Create()        ← возвращает job_id
+→ go worker()
+```
 
 worker:
-→ repository.GetTransactions()
-→ repository.GetRecurringRules()
+```
+→ TransactionRepository.FindForForecast(from, to)
+→ RecurringRuleRepository.FindActive(today)
 
-→ today = now()
+→ past    = transactions (<= today)
+→ future  = generate(recurring_rules, > today)
 
-→ past   = transactions (<= today)
-→ future = generate(recurring_rules, > today)
+→ timeseries = past (только прошлое, t=1..N)
+→ horizon    = количество дней прогноза от последней транзакции
 
-→ timeseries = past + future
+→ future используется как income_events в features:
+   каждая future-точка → IncomeEvent{t, amount, label}
+   t считается относительно последней точки past
 
-→ ml.Predict()
+→ ml.Predict(PredictRequest{timeseries, horizon, features{income_events: future}})
 
-→ repository.SaveForecastResult()
+→ ForecastJobRepository.Update(job{status: done, result})
+```
 
 ---
 
 ## Forecast status
 
 GET /analytics/forecast/:job_id
+
+```
+handler → service.GetForecastJob(id)
+→ ForecastJobRepository.FindByID(id)
+```

@@ -25,6 +25,41 @@ func (r *SQLiteRecurringRuleRepository) Save(rule domain.RecurringRule) error {
 	return nil
 }
 
+func (r *SQLiteRecurringRuleRepository) FindAll() ([]domain.RecurringRule, error) {
+	query := `SELECT id, source_id, type, amount, day, start_date, label FROM recurring_rules`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, errors.DBError("failed to find recurring rule", err)
+	}
+	defer rows.Close()
+
+	var result []domain.RecurringRule
+
+	for rows.Next() {
+		var id int
+		var source_id sql.NullString
+		var typeo sql.NullString
+		var amount float64
+		var day int
+		var start_date_str string
+		var label sql.NullString
+
+		if err := rows.Scan(&id, &source_id, &typeo, &amount, &day, &start_date_str, &label); err != nil {
+			return nil, errors.DBError("failed to scan recurring rule row", err)
+		}
+
+		start_date, err := parseDBTime(start_date_str)
+		if err != nil {
+			return nil, errors.DBError("failed to parse recurring rule start_date", err)
+		}
+
+		trans := domain.RecurringRule{ID: id, SourceID: source_id.String, Type: typeo.String, Amount: amount, Day: day, StartDate: start_date, Label: label.String}
+		result = append(result, trans)
+	}
+
+	return result, nil
+}
+
 func (r *SQLiteRecurringRuleRepository) FindActive(today time.Time) ([]domain.RecurringRule, error) {
 	query := `SELECT id, source_id, type, amount, day, start_date, label
 		FROM recurring_rules r

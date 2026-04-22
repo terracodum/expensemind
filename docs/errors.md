@@ -2,21 +2,23 @@
 
 ## Codes
 
-* INTERNAL_ERROR
-* VALIDATION_ERROR
-* NOT_FOUND
-* PARSE_ERROR
-* INVALID_PDF_FORMAT
-* INVALID_CSV_FORMAT
-* ML_SERVICE_UNAVAILABLE
-* ML_RESPONSE_INVALID
-* DB_ERROR
+| Code                    | Когда                                   |
+|-------------------------|-----------------------------------------|
+| INTERNAL_ERROR          | непредвиденная ошибка                   |
+| VALIDATION_ERROR        | невалидные входные данные               |
+| NOT_FOUND               | ресурс не найден                        |
+| PARSE_ERROR             | ошибка парсинга CSV или PDF             |
+| ML_SERVICE_UNAVAILABLE  | ML сервис недоступен                    |
+| ML_RESPONSE_INVALID     | ML вернул некорректный ответ            |
+| DB_ERROR                | ошибка базы данных                      |
 
 ## Format
 
+```json
 {
-"error": {
-"code": "...",
-"message": "..."
+  "error": {
+    "code": "PARSE_ERROR",
+    "message": "no transactions found in pdf"
+  }
 }
-}
+```
