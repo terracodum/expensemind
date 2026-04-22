@@ -18,6 +18,15 @@ SaveRule(rule RecurringRule) error
 FindAllRules() ([]RecurringRule, error)
 DeleteRule(id string) error
 
+## Types
+
+### Forecast
+
+| Field            | Type        | Description               |
+|------------------|-------------|---------------------------|
+| confidence       | float (0–1) | уверенность модели        |
+| low_data_warning | bool        | true если confidence < 0.5 |
+
 ## ML Client
 
 Predict(req PredictRequest) (Forecast, error)
