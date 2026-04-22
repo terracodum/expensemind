@@ -6,16 +6,10 @@ import (
 	"github.com/terracodum/expensemind/backend/internal/domain"
 )
 
-type Filters struct {
-	From     time.Time
-	To       time.Time
-	Category string
-}
-
 type TransactionRepository interface {
 	Save(tx domain.Transaction) error
 	SaveAll(txs []domain.Transaction) error
-	FindAll(filters Filters) ([]domain.Transaction, error)
+	FindAll(filters domain.Filters) ([]domain.Transaction, error)
 	FindForForecast(from, to time.Time) ([]domain.Transaction, error)
 	Update(tx domain.Transaction) error
 	Delete(id int) error
@@ -23,6 +17,7 @@ type TransactionRepository interface {
 
 type RecurringRuleRepository interface {
 	Save(rule domain.RecurringRule) error
+	FindAll() ([]domain.RecurringRule, error)
 	FindActive(today time.Time) ([]domain.RecurringRule, error)
 	Delete(sourceID string) error
 }

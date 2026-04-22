@@ -31,6 +31,7 @@ Delete(id int) error
 
 ```go
 Save(rule RecurringRule) error
+FindAll() ([]RecurringRule, error)
 FindActive(today time.Time) ([]RecurringRule, error)
 Delete(sourceID string) error
 ```
@@ -57,9 +58,10 @@ UploadTransactions(contentType string, file io.Reader) error
 GetTransactions(filters Filters) ([]Transaction, error)
 UpdateTransaction(tx Transaction) error
 DeleteTransaction(id int) error
-CreateForecast() (int, error)
+CreateForecastJob() (int, error)
 GetForecastJob(id int) (ForecastJob, error)
 GetForecastJobs() ([]ForecastJob, error)
+GetRecurringRules() ([]RecurringRule, error)
 SaveRecurringRule(rule RecurringRule) error
 DeleteRecurringRule(sourceID string) error
 ```

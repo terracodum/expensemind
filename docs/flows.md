@@ -39,11 +39,17 @@ worker:
 → TransactionRepository.FindForForecast(from, to)
 → RecurringRuleRepository.FindActive(today)
 
-→ past   = transactions (<= today)
-→ future = generate(recurring_rules, > today)
-→ timeseries = past + future
+→ past    = transactions (<= today)
+→ future  = generate(recurring_rules, > today)
 
-→ ml.Predict(timeseries)
+→ timeseries = past (только прошлое, t=1..N)
+→ horizon    = количество дней прогноза от последней транзакции
+
+→ future используется как income_events в features:
+   каждая future-точка → IncomeEvent{t, amount, label}
+   t считается относительно последней точки past
+
+→ ml.Predict(PredictRequest{timeseries, horizon, features{income_events: future}})
 
 → ForecastJobRepository.Update(job{status: done, result})
 ```

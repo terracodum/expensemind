@@ -6,9 +6,7 @@ import (
 
 	"github.com/terracodum/expensemind/backend/internal/domain"
 	"github.com/terracodum/expensemind/backend/internal/errors"
-	"github.com/terracodum/expensemind/backend/internal/repository"
 )
-
 
 type SQLiteTransactionRepository struct {
 	db *sql.DB
@@ -82,7 +80,7 @@ func (r *SQLiteTransactionRepository) SaveAll(transaction []domain.Transaction) 
 	return nil
 }
 
-func (r *SQLiteTransactionRepository) FindAll(filters repository.Filters) ([]domain.Transaction, error) {
+func (r *SQLiteTransactionRepository) FindAll(filters domain.Filters) ([]domain.Transaction, error) {
 	query := "SELECT id, amount, description, category, date FROM transactions WHERE 1=1"
 	args := []any{}
 
