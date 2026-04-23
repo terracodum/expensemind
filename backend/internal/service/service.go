@@ -2,6 +2,7 @@ package service
 
 import (
 	"io"
+	"log/slog"
 	"time"
 
 	"github.com/terracodum/expensemind/backend/internal/domain"
@@ -34,6 +35,7 @@ func New(
 
 func (s *service) forecastWorker(id int) {
 	fail := func(err error) {
+		slog.Error("forecast worker failed", "job_id", id, "err", err)
 		s.forecastRepo.Update(domain.ForecastJob{ID: id, Status: "failed"})
 	}
 	today := time.Now()
@@ -48,6 +50,7 @@ func (s *service) forecastWorker(id int) {
 		fail(err)
 	}
 
+	_, _ = trans, rules
 }
 
 func (s *service) UploadTransactions(contentType string, file io.Reader) error {
