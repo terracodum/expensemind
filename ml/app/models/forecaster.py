@@ -38,9 +38,10 @@ class Forecaster:
             for i, b in enumerate(predicted)
         ]
 
-        # confidence: narrower interval → higher confidence
+        # confidence: based on coefficient of variation of the interval width
         interval_width = (future_rows["yhat_upper"] - future_rows["yhat_lower"]).mean()
-        avg_balance = abs(future_rows["yhat"].mean()) + 1e-9
-        confidence = float(np.clip(1.0 - interval_width / avg_balance / 2, 0.0, 1.0))
+        avg_abs_y = future_rows["yhat"].abs().mean()
+        scale = max(avg_abs_y, interval_width, 1.0)
+        confidence = float(np.clip(1.0 - interval_width / scale / 2, 0.0, 1.0))
 
         return forecast, float(predicted[-1]), confidence
