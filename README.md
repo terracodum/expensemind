@@ -1,67 +1,103 @@
 # ExpenseMind
 
-Локальный инструмент для учёта личных финансов студента с аналитикой и ML-прогнозированием баланса.
+Локальный инструмент учёта личных финансов с ML-прогнозированием баланса.
 
-Разворачивается на твоём компьютере — данные никуда не уходят.
-
----
-
-## Формат CSV
-
-Если хочешь загрузить свою таблицу расходов — приведи CSV к такому формату:
-
-```csv
-date;amount;description;category
-01.04.2026;-500.00;Магнит;еда
-15.04.2026;5000.00;Стипендия;доход
-```
-
-- Разделитель — `;`
-- Дата — формат `ДД.ММ.ГГГГ`
-- Amount — отрицательное значение расход, положительное доход
-- Category — можно оставить пустым, заполнишь в приложении
+Работает полностью на твоём компьютере — данные никуда не уходят.
 
 ---
 
-## Установка
+## Быстрый старт
 
-1. Установи [Docker Desktop](https://www.docker.com/products/docker-desktop)
-2. Склонируй репозиторий
+### Требования
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- Git
+
+### Установка
+
 ```bash
 git clone https://github.com/terracodum/expensemind.git
 cd expensemind
+sudo make install
 ```
-3. Запусти
+
+После этого из любого места терминала:
+
 ```bash
-docker-compose up
+expensemind
 ```
-4. Открой браузер на `http://localhost:3000`
+
+Открой браузер: **http://localhost**
+
+### Без установки
+
+```bash
+docker compose up --build
+```
 
 ---
 
 ## Что умеет
 
-- Загрузка выписок из Т-Банка (PDF) — можно загрузить несколько выписок из разных банков
-- Ручная категоризация расходов через UI
-- Аналитика по категориям и периодам
-- Прогноз баланса на 30 дней вперёд (Prophet — учитывает сезонность и регулярные доходы)
-- Редактирование и удаление транзакций
+- **Загрузка выписок** — PDF из Т-Банка, ВТБ, Сбербанка, Ozon Банка, а также CSV
+- **Ручное добавление** транзакций через форму
+- **Категоризация** расходов и доходов
+- **Прогноз баланса** на 30 дней вперёд (Prophet, с учётом сезонности)
+- **График прогноза** по дням с датами
+- **История прогнозов** — все запуски сохраняются
 
-> Для точного прогноза рекомендуем загрузить историю за последний год при первом запуске.
+---
+
+## Загрузка выписок
+
+### PDF
+
+Поддерживаемые банки:
+
+| Банк | Формат |
+|------|--------|
+| Т-Банк | PDF выписка |
+| ВТБ | PDF выписка |
+| Сбербанк | PDF выписка |
+| Ozon Банк | PDF выписка |
+
+При загрузке PDF система спросит, из какого банка файл.
+
+### CSV
+
+Формат:
+
+```csv
+date;amount;description;category
+01.04.2026;-500.00;Магнит;food
+15.04.2026;5000.00;Стипендия;income
+```
+
+- Разделитель — `;`
+- Дата — `ДД.ММ.ГГГГ`
+- Amount — отрицательное расход, положительное доход
+- Category — можно оставить пустым
 
 ---
 
 ## Архитектура
 
 ```
-Браузер (React)
-      ↓
-Go Backend  ←→  SQLite
-      ↓
-Python ML сервис (stateless)
+Браузер (React + MUI)
+        │
+    HTTP/JSON
+        │
+  Go Backend  ──── SQLite
+        │
+    HTTP/JSON
+        │
+Python ML-сервис (stateless)
 ```
 
-Go backend — единственная точка входа. ML сервис не имеет доступа к БД, не парсит PDF, не содержит бизнес-логики.
+**Принципы:**
+- Go — единственная точка входа, вся бизнес-логика в нём
+- ML-сервис только считает прогноз, не имеет доступа к БД
+- Парсинг PDF и CSV — только в Go (через `pdftotext` + собственные парсеры)
 
 ---
 
@@ -70,254 +106,72 @@ Go backend — единственная точка входа. ML сервис �
 ```
 expensemind/
 ├── backend/
-│   ├── cmd/
-│   │   └── main.go                        # точка входа, сборка зависимостей
-│   ├── internal/
-│   │   ├── errors/
-│   │   │   ├── errors.go                  # интерфейс AppError
-│   │   │   ├── codes.go                   # все коды ошибок проекта
-│   │   │   ├── impl.go                    # реализация AppError
-│   │   │   └── constructors.go            # New(), Wrap(), NotFound()...
-│   │   ├── domain/
-│   │   │   ├── transaction.go             # структура Transaction
-│   │   │   └── forecast.go                # структура Forecast
-│   │   ├── repository/
-│   │   │   ├── interface.go               # TransactionRepository интерфейс
-│   │   │   └── sqlite/
-│   │   │       └── transaction.go         # реализация для SQLite
-│   │   ├── parser/
-│   │   │   ├── interface.go               # Parser интерфейс
-│   │   │   ├── pdf.go                     # парсер выписок Т-Банка (PDF)
-│   │   │   └── csv.go                     # парсер CSV
-│   │   ├── ml/
-│   │   │   ├── interface.go               # MLClient интерфейс
-│   │   │   ├── client.go                  # HTTP клиент к Python сервису
-│   │   │   └── dto.go                     # структуры запроса и ответа
-│   │   ├── service/
-│   │   │   ├── interface.go               # TransactionService интерфейс
-│   │   │   └── transaction_service.go     # реализация бизнес-логики
-│   │   └── handler/
-│   │       ├── handler.go                 # регистрация роутов
-│   │       ├── transaction.go             # GET /transactions, POST /upload
-│   │       ├── analytics.go               # GET /analytics/forecast
-│   │       └── middleware.go              # логирование, CORS
-│   └── go.mod
+│   ├── cmd/main.go                  # точка входа
+│   └── internal/
+│       ├── domain/                  # Transaction, Forecast, ForecastJob
+│       ├── errors/                  # типизированные ошибки
+│       ├── handler/                 # HTTP-слой (chi router)
+│       ├── ml/                      # HTTP-клиент к ML-сервису
+│       ├── parser/
+│       │   ├── csv.go
+│       │   └── pdf/
+│       │       ├── tbank.go         # Т-Банк
+│       │       ├── vtb.go           # ВТБ (через pdftotext)
+│       │       ├── sber.go          # Сбербанк (через pdftotext)
+│       │       └── ozon.go          # Ozon Банк (через pdftotext)
+│       ├── repository/sqlite/       # SQLite-репозиторий
+│       └── service/                 # бизнес-логика, воркер прогнозов
 │
 ├── ml/
-│   ├── app/
-│   │   ├── main.py                        # точка входа FastAPI
-│   │   ├── routes/
-│   │   │   └── predict.py                 # POST /internal/v1/predict
-│   │   ├── models/
-│   │   │   └── forecaster.py              # логика прогнозирования
-│   │   └── schemas/
-│   │       ├── request.py                 # Pydantic модель запроса
-│   │       └── response.py                # Pydantic модель ответа
-│   ├── requirements.txt
-│   └── Dockerfile
+│   └── app/
+│       ├── models/forecaster.py     # Prophet-модель
+│       ├── routes/predict.py        # POST /internal/v1/predict
+│       └── schemas/                 # Pydantic-схемы
 │
 ├── frontend/
-│   ├── src/
-│   └── package.json
+│   └── src/pages/
+│       ├── TransactionsPage.tsx
+│       └── ForecastPage.tsx
 │
-├── docs/
-│   ├── ml_spec.md                         # ТЗ для ML разработчика
-│   ├── architecture.md                    # детальная архитектура
-│   └── api.yaml                           # OpenAPI спецификация
-│
+├── docs/                            # архитектура, контракты, спека ML
 ├── docker-compose.yml
-├── .env.example
-├── CLAUDE.md
-├── TEAM.md
-└── README.md
+├── Makefile
+└── expensemind                      # CLI-скрипт
 ```
 
 ---
 
-## Слои и ответственность
-
-### `internal/errors/` — сквозной слой
-Фундамент. Не зависит ни от кого, все зависят от него.
-
-### `internal/domain/` — модели данных
-Чистые структуры. Не знает про HTTP, БД, ML.
-
-### `internal/repository/` — база данных
-Только чтение и запись. Не знает про бизнес-логику.
-
-### `internal/parser/` — парсеры файлов
-Читает выписку Т-Банка (PDF) или CSV, возвращает `[]Transaction`. Ничего не сохраняет.
-
-### `internal/ml/` — клиент ML сервиса
-HTTP клиент к Python. Формирует запрос, возвращает прогноз.
-
-### `internal/service/` — бизнес-логика
-Оркестрирует все слои. Зависит от интерфейсов, не от реализаций.
-
-### `internal/handler/` — HTTP слой
-Принять запрос → вызвать service → вернуть ответ.
-
----
-
-## Направление зависимостей
+## API
 
 ```
-main.go
-  │
-  ├── создаёт repository
-  ├── создаёт parser.Parser
-  ├── создаёт ml.Client
-  ├── создаёт service (получает repository, parser, ml)
-  └── создаёт handler (получает service)
-
-handler  →  ServiceInterface
-service  →  RepositoryInterface
-service  →  ParserInterface
-service  →  MLClientInterface
-errors   ←  все зависят от него
+POST /api/v1/transactions/upload?bank=vtb   — загрузка PDF/CSV
+POST /api/v1/transactions                   — добавить транзакцию вручную
+GET  /api/v1/transactions                   — список транзакций
+GET  /api/v1/analytics/forecast             — история прогнозов
+POST /api/v1/analytics/forecast             — запустить новый прогноз
 ```
 
-Зависимости только вниз. `repository` не знает про `service`. `service` не знает про `handler`.
-
----
-
-## Поток данных
-
-**POST /transactions/upload**
-```
-handler → service.Upload()
-            → parser.Parse()       → []Transaction
-            → mcc.ToCategory()     → категория для каждой транзакции
-            → repository.SaveAll()
-          → { "uploaded": 42 }
-```
-
-**GET /transactions**
-```
-handler → service.GetTransactions(filters)
-            → repository.FindAll(filters)
-          → []Transaction
-```
-
-**GET /analytics/forecast**
-```
-handler → service.GetForecast(horizon)
-            → repository.FindAll()
-            → агрегация в timeseries    ← бизнес-логика в Go
-            → извлечение фич
-            → ml.Client.Predict()
-          → Forecast
-```
-
----
-
-## Модель данных
-
-```sql
-CREATE TABLE transactions (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    amount      REAL    NOT NULL,
-    description TEXT,
-    category    TEXT,
-    date        TEXT    NOT NULL
-);
-
-CREATE TABLE recurring_income (
-    id     INTEGER PRIMARY KEY AUTOINCREMENT,
-    amount REAL    NOT NULL,
-    day    INTEGER NOT NULL,
-    label  TEXT
-);
-```
-
-- `amount < 0` — расход
-- `amount > 0` — доход
-- `category` определяется из описания операции
-
----
-
-## Формат ошибок
-
-```json
-{
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "transaction not found"
-  }
-}
-```
-
----
-
-## Публичное API
-
-```
-Base: /api/v1
-
-GET  /transactions          — список транзакций
-POST /transactions/upload   — загрузка PDF или CSV файла
-GET  /analytics/forecast    — прогноз баланса
-```
-
-Полное описание: `docs/api.yaml`
-
----
-
-## ML API (внутренний)
-
-```
-POST /internal/v1/predict
-GET  /health
-```
-
-Полная спецификация: `docs/ml_spec.md`
-
----
-
-## Как добавлять новый функционал
-
-Новые фичи = новые файлы. Старый код не трогается.
-
-**Добавить поддержку другого банка:**
-```
-1. pdf/sber_parser.go   ← новый файл
-2. main.go              ← выбор парсера по типу файла
-```
-
-**Добавить новый тип аналитики:**
-```
-1. repository/  ← новый метод
-2. service/     ← новый метод
-3. handler/     ← новый роут
-```
-
-**Добавить авторизацию:**
-```
-1. handler/middleware.go  ← новый middleware
-```
-
----
-
-## Тесты
-
-```
-internal/
-├── pdf/
-│   ├── parser.go
-│   └── parser_test.go              # белый ящик
-└── service/
-    ├── transaction_service.go
-    └── transaction_service_test.go  # чёрный ящик, мокаем зависимости
-```
+Подробнее: [`docs/contracts.md`](docs/contracts.md)
 
 ---
 
 ## Технологии
 
-| Слой     | Технология                            |
-|----------|---------------------------------------|
-| Backend  | Go 1.26                               |
-| ML       | Python, FastAPI, pandas, scikit-learn |
-| Frontend | React                                 |
-| База     | SQLite                                |
-| Запуск   | Docker, Docker Compose                |
+| Слой | Технология |
+|------|-----------|
+| Frontend | React, MUI, TanStack Query, Recharts |
+| Backend | Go 1.26, chi, SQLite |
+| ML | Python, FastAPI, Prophet |
+| PDF-парсинг | pdftotext (poppler) |
+| Запуск | Docker Compose |
+
+---
+
+## Документация
+
+- [`docs/architecture.md`](docs/architecture.md) — слои и зависимости
+- [`docs/flows.md`](docs/flows.md) — потоки данных
+- [`docs/contracts.md`](docs/contracts.md) — API-контракты
+- [`docs/ml_spec.md`](docs/ml_spec.md) — спецификация ML-сервиса
+- [`docs/db.md`](docs/db.md) — схема БД
+- [`docs/errors.md`](docs/errors.md) — коды ошибок
