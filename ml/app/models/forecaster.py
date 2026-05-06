@@ -38,10 +38,12 @@ class Forecaster:
             for i, (b, (_, row)) in enumerate(zip(predicted, future_rows.iterrows()))
         ]
 
-        # confidence: based on coefficient of variation of the interval width
+        # confidence: interval tightness + data volume bonus
         interval_width = (future_rows["yhat_upper"] - future_rows["yhat_lower"]).mean()
         avg_abs_y = future_rows["yhat"].abs().mean()
         scale = max(avg_abs_y, interval_width, 1.0)
-        confidence = float(np.clip(1.0 - interval_width / scale / 2, 0.0, 1.0))
+        interval_score = float(np.clip(1.0 - interval_width / scale / 3, 0.0, 1.0))
+        volume_bonus = min(n / 365, 0.2)  # up to +20% for a year of data
+        confidence = float(np.clip(interval_score + volume_bonus, 0.0, 1.0))
 
         return forecast, float(predicted[-1]), confidence
