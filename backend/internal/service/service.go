@@ -51,6 +51,36 @@ func (s *service) forecastWorker(id int) {
 	}
 
 	_, _ = trans, rules
+
+	TS := []ml.TimePoint{}
+
+	byDay := make(map[time.Time][]domain.Transaction)
+	for _, tx := range trans {
+		day := tx.Date.Truncate(24 * time.Hour)
+		byDay[day] = append(byDay[day], tx)
+	}
+
+	for k, v := range byDay {
+		var foodTotal, transportTotal, entertainmentTotal, totalAmount float64
+		for _, tx := range txs {
+			totalAmount += tx.Amount
+			switch tx.Category {
+			case "food":
+				foodTotal += tx.Amount
+			case "transport":
+				transportTotal += tx.Amount
+			case "entertainment":
+				entertainmentTotal += tx.Amount
+			}
+		}
+	}
+	count := len(txs)
+	isWeekend := day.Weekday() == time.Saturday || day.Weekday() == time.Sunday
+
+	var avgSize float64
+	if count > 0 {
+		avgSize = totalAmount / float64(count)
+	}
 }
 
 func (s *service) UploadTransactions(contentType string, file io.Reader) error {
