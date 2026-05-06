@@ -1,0 +1,26 @@
+services:
+  ml:
+    build: ./ml
+    expose:
+      - "8001"
+
+  backend:
+    build: ./backend
+    environment:
+      DB_PATH: /data/expensemind.db
+      ML_URL: http://ml:8001
+      ADDR: :8080
+    volumes:
+      - db-data:/data
+    depends_on:
+      - ml
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
