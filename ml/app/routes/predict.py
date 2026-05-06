@@ -24,7 +24,7 @@ async def predict(req: PredictRequest):
         )
 
     return PredictResponse(
-        forecast=[ForecastPoint(t=p["t"], balance=p["balance"]) for p in forecast_raw],
+        forecast=[ForecastPoint(t=p["t"], date=p["date"], balance=p["balance"]) for p in forecast_raw],
         predicted_balance=predicted_balance,
         confidence=confidence,
     )
