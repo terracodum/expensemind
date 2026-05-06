@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/terracodum/expensemind/backend/internal/domain"
-	"github.com/terracodum/expensemind/backend/internal/parser"
+	"github.com/terracodum/expensemind/backend/internal/parser/pdf"
 )
 
 func TestTBankParse_Structure(t *testing.T) {
@@ -19,7 +19,7 @@ func TestTBankParse_Structure(t *testing.T) {
 	}
 	defer f.Close()
 
-	txs, err := (&parser.TBankParser{}).Parse(f)
+	txs, err := (&pdf.TBankParser{}).Parse(f)
 	if err != nil {
 		t.Fatal(err)
 	}

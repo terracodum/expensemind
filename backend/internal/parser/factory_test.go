@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/terracodum/expensemind/backend/internal/parser"
+	"github.com/terracodum/expensemind/backend/internal/parser/pdf"
 )
 
 func TestNewParser(t *testing.T) {
@@ -13,7 +14,7 @@ func TestNewParser(t *testing.T) {
 		expectType  parser.Parser
 	}{
 		{"text/csv", false, &parser.CSVParser{}},
-		{"application/pdf", false, &parser.TBankParser{}},
+		{"application/pdf", false, &pdf.TBankParser{}},
 		{"text/plain", true, nil},
 	}
 
@@ -35,8 +36,8 @@ func TestNewParser(t *testing.T) {
 			if _, ok := p.(*parser.CSVParser); !ok {
 				t.Errorf("%s: expected *CSVParser, got %T", tc.contentType, p)
 			}
-		case *parser.TBankParser:
-			if _, ok := p.(*parser.TBankParser); !ok {
+		case *pdf.TBankParser:
+			if _, ok := p.(*pdf.TBankParser); !ok {
 				t.Errorf("%s: expected *TBankParser, got %T", tc.contentType, p)
 			}
 		}
