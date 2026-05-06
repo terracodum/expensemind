@@ -4,6 +4,7 @@ from typing import List
 
 class ForecastPoint(BaseModel):
     t: int
+    date: str
     balance: float
 
 

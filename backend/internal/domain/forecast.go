@@ -4,6 +4,7 @@ import "time"
 
 type Point struct {
 	T       int
+	Date    string
 	Balance float64
 }
 

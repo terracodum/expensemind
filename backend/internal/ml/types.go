@@ -31,6 +31,7 @@ type PredictRequest struct {
 
 type forecastPoint struct {
 	T       int     `json:"t"`
+	Date    string  `json:"date"`
 	Balance float64 `json:"balance"`
 }
 

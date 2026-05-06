@@ -17,7 +17,7 @@ interface ForecastJob {
   Result?: {
     PredictedBalance: number
     Confidence: number
-    Points: { T: number; Balance: number }[]
+    Points: { T: number; Date: string; Balance: number }[]
   }
 }
 
@@ -145,11 +145,11 @@ export default function ForecastPage() {
                 Прогноз баланса по дням
               </Typography>
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={job.Result.Points.map(p => ({ day: p.T, balance: p.Balance }))}>
+                <LineChart data={job.Result.Points.map(p => ({ date: p.Date, balance: p.Balance }))}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="day" tick={{ fontSize: 12 }} label={{ value: 'день', position: 'insideBottomRight', offset: -5, fontSize: 12 }} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
                   <YAxis tick={{ fontSize: 12 }} width={70} />
-                  <Tooltip formatter={(v: number) => v.toFixed(2)} labelFormatter={l => `День ${l}`} />
+                  <Tooltip formatter={(v: number) => v.toFixed(2)} labelFormatter={l => `${l}`} />
                   <Line type="monotone" dataKey="balance" stroke="#1976d2" dot={false} strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>

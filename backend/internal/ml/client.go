@@ -41,7 +41,7 @@ func (c *Client) Predict(req PredictRequest) (domain.Forecast, error) {
 
 	points := make([]domain.Point, len(r.Forecast))
 	for i, p := range r.Forecast {
-		points[i] = domain.Point{T: p.T, Balance: p.Balance}
+		points[i] = domain.Point{T: p.T, Date: p.Date, Balance: p.Balance}
 	}
 
 	return domain.Forecast{

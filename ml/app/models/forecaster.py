@@ -34,8 +34,8 @@ class Forecaster:
                 predicted[i] += income_map[t]
 
         forecast = [
-            {"t": last_t + i + 1, "balance": float(b)}
-            for i, b in enumerate(predicted)
+            {"t": last_t + i + 1, "date": row["ds"].strftime("%Y-%m-%d"), "balance": float(b)}
+            for i, (b, (_, row)) in enumerate(zip(predicted, future_rows.iterrows()))
         ]
 
         # confidence: based on coefficient of variation of the interval width
