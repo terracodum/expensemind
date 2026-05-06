@@ -18,6 +18,15 @@ func (h *Handler) createForecastJob(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusAccepted, map[string]int{"job_id": id})
 }
 
+func (h *Handler) getForecastJobs(w http.ResponseWriter, r *http.Request) {
+	jobs, err := h.svc.GetForecastJobs()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, jobs)
+}
+
 func (h *Handler) getForecastJob(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {

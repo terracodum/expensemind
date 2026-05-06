@@ -22,12 +22,14 @@ func New(svc service.Service) http.Handler {
 
 	r.Route("/transactions", func(r chi.Router) {
 		r.Get("/", h.getTransactions)
+		r.Post("/", h.createTransaction)
 		r.Post("/upload", h.uploadTransactions)
 		r.Patch("/{id}", h.updateTransaction)
 		r.Delete("/{id}", h.deleteTransaction)
 	})
 
 	r.Route("/analytics", func(r chi.Router) {
+		r.Get("/forecast", h.getForecastJobs)
 		r.Post("/forecast", h.createForecastJob)
 		r.Get("/forecast/{id}", h.getForecastJob)
 	})

@@ -184,6 +184,10 @@ func (s *service) UploadTransactions(contentType string, file io.Reader) error {
 	return nil
 }
 
+func (s *service) SaveTransaction(tx domain.Transaction) error {
+	return s.txRepo.SaveAll([]domain.Transaction{tx})
+}
+
 func (s *service) GetTransactions(filters domain.Filters) ([]domain.Transaction, error) {
 	trans, err := s.txRepo.FindAll(filters)
 	if err != nil {

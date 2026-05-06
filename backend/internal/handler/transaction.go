@@ -11,6 +11,19 @@ import (
 	apperrors "github.com/terracodum/expensemind/backend/internal/errors"
 )
 
+func (h *Handler) createTransaction(w http.ResponseWriter, r *http.Request) {
+	var tx domain.Transaction
+	if err := json.NewDecoder(r.Body).Decode(&tx); err != nil {
+		writeError(w, apperrors.ValidationError("invalid request body"))
+		return
+	}
+	if err := h.svc.SaveTransaction(tx); err != nil {
+		writeError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *Handler) uploadTransactions(w http.ResponseWriter, r *http.Request) {
 	err := h.svc.UploadTransactions(r.Header.Get("Content-Type"), r.Body)
 	if err != nil {
