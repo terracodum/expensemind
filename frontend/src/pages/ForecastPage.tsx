@@ -145,7 +145,7 @@ export default function ForecastPage() {
                 Прогноз баланса по дням
               </Typography>
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={job.Result.Points.map(p => ({ date: p.Date, balance: p.Balance }))}>
+                <LineChart data={job.Result.Points.map(p => ({ date: p.Date?.slice(5), balance: p.Balance }))}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
                   <YAxis tick={{ fontSize: 12 }} width={70} />
