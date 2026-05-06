@@ -1,9 +1,15 @@
 import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Box, Button, Typography, CircularProgress, Alert,
-  Paper, Stack, LinearProgress, Chip,
+  Paper, Stack, LinearProgress, Chip, Divider,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Skeleton,
 } from '@mui/material'
 import AutoGraphIcon from '@mui/icons-material/AutoGraph'
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis,
+  CartesianGrid, Tooltip,
+} from 'recharts'
 
 interface ForecastJob {
   ID: number
@@ -23,9 +29,15 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export default function ForecastPage() {
+  const qc = useQueryClient()
   const [job, setJob] = useState<ForecastJob | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const { data: history, isLoading: historyLoading } = useQuery<ForecastJob[]>({
+    queryKey: ['forecast-jobs'],
+    queryFn: () => fetch('/analytics/forecast').then(r => r.json()),
+  })
 
   async function startForecast() {
     setLoading(true)
@@ -51,6 +63,7 @@ export default function ForecastPage() {
         setTimeout(() => pollJob(id), 1500)
       } else {
         setLoading(false)
+        qc.invalidateQueries({ queryKey: ['forecast-jobs'] })
       }
     } catch {
       setError('Потеряна связь с сервером')
@@ -125,8 +138,76 @@ export default function ForecastPage() {
               )}
             </Paper>
           </Stack>
+
+          {job.Result.Points?.length > 0 && (
+            <Paper elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2, p: 3 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Прогноз баланса по дням
+              </Typography>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={job.Result.Points.map(p => ({ day: p.T, balance: p.Balance }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="day" tick={{ fontSize: 12 }} label={{ value: 'день', position: 'insideBottomRight', offset: -5, fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} width={70} />
+                  <Tooltip formatter={(v: number) => v.toFixed(2)} labelFormatter={l => `День ${l}`} />
+                  <Line type="monotone" dataKey="balance" stroke="#1976d2" dot={false} strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </Paper>
+          )}
         </Stack>
       )}
+
+      <Divider sx={{ my: 4 }} />
+
+      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>История прогнозов</Typography>
+      <Paper elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ '& th': { bgcolor: '#fafafa', fontWeight: 600 } }}>
+                <TableCell>#</TableCell>
+                <TableCell>Статус</TableCell>
+                <TableCell align="right">Баланс через 30 дней</TableCell>
+                <TableCell align="right">Уверенность</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {historyLoading && Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
+                  {Array.from({ length: 4 }).map((_, j) => <TableCell key={j}><Skeleton /></TableCell>)}
+                </TableRow>
+              ))}
+              {!historyLoading && !history?.length && (
+                <TableRow>
+                  <TableCell colSpan={4} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                    Прогнозов ещё нет
+                  </TableCell>
+                </TableRow>
+              )}
+              {history?.slice().reverse().map(j => (
+                <TableRow key={j.ID} hover>
+                  <TableCell sx={{ color: 'text.secondary' }}>{j.ID}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={STATUS_LABEL[j.Status] ?? j.Status}
+                      size="small"
+                      color={j.Status === 'done' ? 'success' : j.Status === 'failed' ? 'error' : 'default'}
+                    />
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500,
+                    color: (j.Result?.PredictedBalance ?? 0) >= 0 ? 'success.main' : 'error.main' }}>
+                    {j.Result ? `${j.Result.PredictedBalance >= 0 ? '+' : ''}${j.Result.PredictedBalance.toFixed(2)}` : '—'}
+                  </TableCell>
+                  <TableCell align="right">
+                    {j.Result ? `${Math.round(j.Result.Confidence * 100)}%` : '—'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
     </Box>
   )
 }

@@ -168,8 +168,8 @@ func nextRuleOccurrence(from time.Time, dayOfMonth int) time.Time {
 	return time.Date(y, m+1, dayOfMonth, 0, 0, 0, 0, loc)
 }
 
-func (s *service) UploadTransactions(contentType string, file io.Reader) error {
-	pars, err := s.parserFactory.Create(contentType)
+func (s *service) UploadTransactions(contentType, bank string, file io.Reader) error {
+	pars, err := s.parserFactory.Create(contentType, bank)
 	if err != nil {
 		return err
 	}

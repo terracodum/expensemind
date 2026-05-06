@@ -25,7 +25,8 @@ func (h *Handler) createTransaction(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) uploadTransactions(w http.ResponseWriter, r *http.Request) {
-	err := h.svc.UploadTransactions(r.Header.Get("Content-Type"), r.Body)
+	bank := r.URL.Query().Get("bank")
+	err := h.svc.UploadTransactions(r.Header.Get("Content-Type"), bank, r.Body)
 	if err != nil {
 		writeError(w, err)
 		return

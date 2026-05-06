@@ -19,7 +19,8 @@ func TestNewParser(t *testing.T) {
 
 	for _, tc := range tests {
 		f := parser.Factory{}
-		p, err := f.Create(tc.contentType)
+		bank := "tbank"
+		p, err := f.Create(tc.contentType, bank)
 		if tc.expectErr {
 			if err == nil {
 				t.Errorf("%s: expected error, got nil", tc.contentType)

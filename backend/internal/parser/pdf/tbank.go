@@ -1,4 +1,4 @@
-package parser
+package pdf
 
 import (
 	"bytes"
@@ -44,12 +44,12 @@ func (p *TBankParser) Parse(file io.Reader) ([]domain.Transaction, error) {
 }
 
 var txRe = regexp.MustCompile(
-	`(\d{2}\.\d{2}\.\d{4})\n\d{2}:\d{2}\n` + // дата1 + время1
-		`\d{2}\.\d{2}\.\d{4}\n\d{2}:\d{2}\n` + // дата2 + время2
-		`[+\-][\d ]+\.\d{2} ₽\n` + // сумма1 (пропускаем)
-		`([+\-][\d ]+\.\d{2}) ₽\n` + // сумма2 (захватываем)
-		`(.+)\n` + // описание
-		`(\d{4}|—)\n`, // карта
+	`(\d{2}\.\d{2}\.\d{4})\n\d{2}:\d{2}\n` +
+		`\d{2}\.\d{2}\.\d{4}\n\d{2}:\d{2}\n` +
+		`[+\-][\d ]+\.\d{2} ₽\n` +
+		`([+\-][\d ]+\.\d{2}) ₽\n` +
+		`(.+)\n` +
+		`(\d{4}|—)\n`,
 )
 
 func parseTBankText(text string) ([]domain.Transaction, error) {

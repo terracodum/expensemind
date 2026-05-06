@@ -7,7 +7,7 @@ import (
 )
 
 type Service interface {
-	UploadTransactions(contentType string, file io.Reader) error
+	UploadTransactions(contentType, bank string, file io.Reader) error
 	SaveTransaction(tx domain.Transaction) error
 	GetTransactions(filters domain.Filters) ([]domain.Transaction, error)
 	UpdateTransaction(tx domain.Transaction) error
